@@ -23,8 +23,12 @@ try:
         request = json.loads(b_request.decode())
 
         if validate_request(request):
-            print(f'Client send valid request: {request}')
-            response = make_response(request, 200, data=request.get('data'))
+            try:
+                print(f'Client send valid request: {request}')
+                response = make_response(request, 200, data=request.get('data'))
+            except Exception as err:
+                print(f'Internal server error: {err}')
+                response = make_response(request, 500, 'Internal server error')
         else:
             print(f'Client send invalid request: {request}')
             response = make_response(request, 404, 'Wrong request')
