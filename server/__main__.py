@@ -3,6 +3,7 @@ import json
 
 from configure import get_config
 from protocol import validate_request, make_response
+from actions import resolve
 
 
 config = get_config()
@@ -23,12 +24,20 @@ try:
         request = json.loads(b_request.decode())
 
         if validate_request(request):
-            try:
-                print(f'Client send valid request: {request}')
-                response = make_response(request, 200, data=request.get('data'))
-            except Exception as err:
-                print(f'Internal server error: {err}')
-                response = make_response(request, 500, 'Internal server error')
+            actions_name = request.get('action')
+            controller = resolve(actions_name)
+            
+            if controller:
+                try:
+                    print(f'Client send valid request: {request}')
+                    response = controller(request)
+                except Exception as err:
+                    print(f'Internal server error: {err}')
+                    response = make_response(request, 500, 'Internal server error')
+            else:
+                print(f'Controller with action name {actions_name} does not exists')
+                response = make_response(request, 404, 'Action not found')
+
         else:
             print(f'Client send invalid request: {request}')
             response = make_response(request, 404, 'Wrong request')
